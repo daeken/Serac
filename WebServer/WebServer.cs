@@ -10,16 +10,19 @@ using static System.Console;
 
 namespace Serac {
 	public class WebServer {
-		readonly List<(Func<Request, Response> Handler, string[] RootPath)> Handlers = new List<(Func<Request, Response> Handler, string[] RootPath)>();
+		readonly List<(Func<Request, Task<Response>> Handler, string[] RootPath)> Handlers = new List<(Func<Request, Task<Response>> Handler, string[] RootPath)>();
 		readonly List<Task> Listeners = new List<Task>();
 		
-		public WebServer RegisterHandler(Func<Request, Response> handler, string root) {
+		public WebServer RegisterHandler(Func<Request, Task<Response>> handler, string root) {
 			var rootpath = root.Split('/');
 			if(rootpath[0] == "")
 				rootpath = rootpath.Skip(rootpath.Length > 1 && rootpath[1] == "" ? 2 : 1).ToArray();
 			Handlers.Add((handler, rootpath));
 			return this;
 		}
+
+		public WebServer RegisterHandler(Func<Request, Response> handler, string root) =>
+			RegisterHandler(async request => handler(request), root);
 		
 		public WebServer ListenOn(int port, IPAddress ip=null) {
 			Listeners.Add(Task.Run(async () => {
@@ -47,7 +50,7 @@ namespace Serac {
 				var first = true;
 
 				while(keepAlive || first) {
-					var request = await Request.Parse(stream, sr);
+					var request = await Request.Parse(stream, sr, sw);
 					if(request == null)
 						return;
 
@@ -59,7 +62,7 @@ namespace Serac {
 						if(rp.Length > path.Length || !rp.SequenceEqual(path.Take(rp.Length)))
 							continue;
 						request.Path = rp.Length == 0 ? request.RealPath : "/" + string.Join('/', path.Skip(rp.Length));
-						response = handler(request);
+						response = await handler(request);
 						break;
 					}
 
@@ -69,7 +72,7 @@ namespace Serac {
 					}
 					
 					if(response == null)
-						response = new Response {StatusCode = 404};
+						response = new Response {StatusCode = 404, Body = "File not found"};
 					if(keepAlive)
 						response.Headers["Connection"] = "keep-alive";
 					WriteLine($"Response status {response.StatusCode}");
@@ -79,7 +82,6 @@ namespace Serac {
 				if(!(e.InnerException is SocketException))
 					throw;
 			} finally {
-				WriteLine("Client disconnected");
 				socket.Close();
 			}
 		}

@@ -78,11 +78,12 @@ namespace Serac {
 		}
 
 		public async Task Send(Stream stream, StreamWriter sw) {
-			await sw.WriteAsync($"HTTP/1.1 {StatusCode} {(StatusCodes.ContainsKey(StatusCode) ? StatusCodes[StatusCode] : "")}\r\n");
+			await sw.WriteAsync($"HTTP/1.1 {StatusCode} {(StatusCodes.ContainsKey(StatusCode) ? StatusCodes[StatusCode] : "Unknown")}\r\n");
 			if(Data != null && !Headers.ContainsKey("Content-Length"))
 				Headers["Content-Length"] = Data.Length.ToString();
 			foreach(var (k, v) in Headers)
-				await sw.WriteAsync($"{k}: {v}\r\n");
+				if(v != null)
+					await sw.WriteAsync($"{k}: {v}\r\n");
 			await sw.WriteAsync("\r\n");
 			await sw.FlushAsync();
 

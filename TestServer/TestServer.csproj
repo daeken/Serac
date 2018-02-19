@@ -6,5 +6,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Static\Static.csproj" />
     <ProjectReference Include="..\WebServer\WebServer.csproj" />
+    <ProjectReference Include="..\WebSockets\WebSockets.csproj" />
   </ItemGroup>
 </Project>

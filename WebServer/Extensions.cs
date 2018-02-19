@@ -22,5 +22,8 @@ namespace Serac {
 			await stream.ReadAsync(data, 0, count);
 			return data;
 		}
+		
+		public static Task WriteAsync(this Stream stream, byte[] data) =>
+			stream.WriteAsync(data, 0, data.Length);
 	}
 }

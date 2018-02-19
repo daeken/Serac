@@ -8,6 +8,7 @@ using static System.Console;
 namespace Serac {
 	public class Request {
 		public readonly Stream Stream;
+		public readonly StreamWriter StreamWriter;
 		public readonly string RealPath, Method;
 		public readonly Dictionary<string, string> Query;
 		public readonly HeaderDictionary Headers;
@@ -15,8 +16,9 @@ namespace Serac {
 
 		public string Path { get; internal set; }
 
-		Request(Stream stream, string path, string method, HeaderDictionary headers, byte[] body) {
+		Request(Stream stream, StreamWriter sw, string path, string method, HeaderDictionary headers, byte[] body) {
 			Stream = stream;
+			StreamWriter = sw;
 			if(path.Contains("?")) {
 				string query;
 				(RealPath, query) = path.Split('?', 2);
@@ -31,7 +33,7 @@ namespace Serac {
 			Body = body;
 		}
 		
-		public static async Task<Request> Parse(Stream stream, StreamReader sr) {
+		public static async Task<Request> Parse(Stream stream, StreamReader sr, StreamWriter sw) {
 			var first = (await sr.ReadLineAsync())?.Split(' ');
 			if(first == null || first.Length != 3)
 				return null;
@@ -48,7 +50,7 @@ namespace Serac {
 
 			var body = headers.ContainsKey("Content-Length") ? await stream.ReadAsync(int.Parse(headers["Content-Length"])) : null;
 				
-			return new Request(stream, first[1], first[2], headers, body);
+			return new Request(stream, sw, first[1], first[0], headers, body);
 		}
 	}
 }

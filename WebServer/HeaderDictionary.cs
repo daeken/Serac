@@ -26,5 +26,7 @@ namespace Serac {
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 		public IEnumerator<(string, string)> GetEnumerator() => Backing.SelectMany(kl => kl.Value.Select(v => (kl.Key, v))).GetEnumerator();
 		public List<string> GetList(string key) => Backing.ContainsKey(key) ? Backing[key] : null;
+
+		public string TryGetValue(string key, string def = null) => Backing.ContainsKey(key) ? this[key] : def;
 	}
 }

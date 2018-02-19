@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\WebServer\WebServer.csproj">
+      <Project>{9B91C91D-0D37-49C7-A204-18B84B7B9A5D}</Project>
+      <Name>WebServer</Name>
+    </ProjectReference>
+  </ItemGroup>
+</Project>

@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Serac.Static {
 	public static class Static {
-		public static Func<Request, Response> Serve(string filepath) {
+		public static Func<Request, Task<Response>> Serve(string filepath) {
 			filepath += "/";
-			return request => {
+			return async request => {
 				var sp = filepath + request.Path;
 				if(request.Path.Contains("/../") || !File.Exists(sp))
 					return null;
@@ -15,7 +16,7 @@ namespace Serac.Static {
 				return new Response {
 					StatusCode = 200, 
 					ContentType = mime, 
-					Data = File.ReadAllBytes(sp)
+					Data = await File.ReadAllBytesAsync(sp)
 				};
 			};
 		}
