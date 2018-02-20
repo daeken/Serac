@@ -67,7 +67,7 @@ namespace Serac {
 		public int StatusCode = 200;
 		public readonly HeaderDictionary Headers = new HeaderDictionary();
 		public byte[] Data;
-		public bool Gzipped;
+		public bool Gzipped, NoCompression;
 
 		public string Body {
 			set => Data = Encoding.UTF8.GetBytes(value);

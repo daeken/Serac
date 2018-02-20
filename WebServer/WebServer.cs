@@ -96,7 +96,7 @@ namespace Serac {
 					if(keepAlive)
 						response.Headers["Connection"] = "keep-alive";
 
-					if(request.UseGzip && !response.Gzipped) {
+					if(request.UseGzip && !response.Gzipped && !response.NoCompression) {
 						using(var wms = new MemoryStream()) {
 							using(var rms = new MemoryStream(response.Data))
 								using(var gs = new GZipStream(wms, CompressionLevel.Fastest)) {
@@ -108,7 +108,7 @@ namespace Serac {
 						}
 					}
 
-					if(response.Gzipped)
+					if(response.Gzipped && !response.Headers.ContainsKey("Content-Encoding"))
 						response.Headers["Content-Encoding"] = "gzip";
 
 					await response.Send(stream, sw);

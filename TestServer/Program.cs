@@ -9,6 +9,7 @@ namespace TestServer {
 		static void Main(string[] args) {
 			new WebServer()
 				.EnableCompression()
+				.EnableStaticCache()
 				.WebSocket("/socket", async (ws, request) => {
 					ws.Disconnect += (_, fromClient) => WriteLine($"{(fromClient ? "Client" : "Server")} disconnected");
 					
