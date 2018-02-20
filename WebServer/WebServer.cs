@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -12,6 +13,16 @@ namespace Serac {
 	public class WebServer {
 		readonly List<(Func<Request, Task<Response>> Handler, string[] RootPath)> Handlers = new List<(Func<Request, Task<Response>> Handler, string[] RootPath)>();
 		readonly List<Task> Listeners = new List<Task>();
+		bool CompressionEnabled;
+
+		public WebServer EnableCompression() {
+			CompressionEnabled = true;
+			return this;
+		}
+		public WebServer DisableCompression() {
+			CompressionEnabled = false;
+			return this;
+		}
 		
 		public WebServer RegisterHandler(string root, Func<Request, Task<Response>> handler) {
 			var rootpath = root.Split('/');
@@ -58,6 +69,9 @@ namespace Serac {
 					if(request == null)
 						return;
 
+					var encodings = request.Headers.TryGetValue("Accept-Encoding", "").Split(",").Select(x => x.Trim());
+					request.UseGzip = CompressionEnabled && encodings.Contains("gzip");
+
 					var path = request.RealPath.Split('/');
 					if(path[0] == "")
 						path = path.Skip(path.Length > 1 && path[1] == "" ? 2 : 1).ToArray();
@@ -81,7 +95,22 @@ namespace Serac {
 						response = new Response {StatusCode = 404, Body = "File not found"};
 					if(keepAlive)
 						response.Headers["Connection"] = "keep-alive";
-					WriteLine($"Response status {response.StatusCode}");
+
+					if(request.UseGzip && !response.Gzipped) {
+						using(var wms = new MemoryStream()) {
+							using(var rms = new MemoryStream(response.Data))
+								using(var gs = new GZipStream(wms, CompressionLevel.Fastest)) {
+									await rms.CopyToAsync(gs);
+									await gs.FlushAsync();
+								}
+							response.Data = wms.ToArray();
+							response.Gzipped = true;
+						}
+					}
+
+					if(response.Gzipped)
+						response.Headers["Content-Encoding"] = "gzip";
+
 					await response.Send(stream, sw);
 				}
 			} catch(IOException e) {

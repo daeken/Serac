@@ -13,6 +13,7 @@ namespace Serac {
 		public readonly Dictionary<string, string> Query;
 		public readonly HeaderDictionary Headers;
 		public readonly byte[] Body;
+		public bool UseGzip;
 
 		public string Path { get; internal set; }
 
