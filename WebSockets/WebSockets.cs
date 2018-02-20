@@ -4,8 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
+using static System.Console;
 
 namespace Serac.WebSockets {
 	public class WebSocket {
@@ -13,7 +13,7 @@ namespace Serac.WebSockets {
 		readonly Stream Stream;
 
 		public event EventHandler<bool> Disconnect;
-		bool Closed;
+		bool Closed, ClientClose;
 		
 		internal WebSocket(Stream stream) => Stream = stream;
 
@@ -55,22 +55,33 @@ namespace Serac.WebSockets {
 			var final = start[0] >> 7 == 1;
 			var opcode = start[0] & 0xF;
 			if(opcode == 8) {
-				Closed = true;
-				Disconnect?.Invoke(this, true);
+				ClientClose = true;
 				throw new CloseException();
 			}
 
 			var plen = start[1] & 0x7F;
-			if(plen == 126)
-				BitConverter.ToInt16(await Stream.ReadAsync(2), 0);
-			else if(plen == 127)
-				BitConverter.ToInt64(await Stream.ReadAsync(8), 0);
+			if(plen == 126) {
+				var slen = await Stream.ReadAsync(2);
+				plen = (slen[0] << 8) | slen[1];
+			} else if(plen == 127) {
+				var slen = await Stream.ReadAsync(8);
+				Array.Reverse(slen);
+				var temp = BitConverter.ToUInt64(slen, 0);
+				if(temp > int.MaxValue) throw new OverflowException();
+				plen = (int) temp;
+			}
+
 			var mask = start[1] >> 7 == 1 ? await Stream.ReadAsync(4) : null;
 			var data = await Stream.ReadAsync(plen);
 
 			if(mask != null)
 				for(var i = 0; i < plen; ++i)
 					data[i] ^= mask[i & 3];
+
+			if(opcode == 9) {
+				await WriteFrame(final, 10, data);
+				return await ReadFrame();
+			}
 			
 			return (final, opcode, data);
 		}
@@ -86,8 +97,8 @@ namespace Serac.WebSockets {
 		public async Task Close() {
 			if(!Closed) {
 				Closed = true;
-				Disconnect?.Invoke(this, false);
 				await WriteFrame(true, 8, new byte[0]);
+				Disconnect?.Invoke(this, ClientClose);
 				Stream.Close();
 				throw new CloseException();
 			}
@@ -116,14 +127,24 @@ namespace Serac.WebSockets {
 				try {
 					await handler(ws, request);
 				} catch(WebSocket.CloseException) {
-					await ws.Close();
+					try {
+						await ws.Close();
+					} catch(WebSocket.CloseException) {
+						// Expected
+					}
 				}
 
 				return null;
 			};
 		}
 
+		public static Func<Request, Task<Response>> Serve(Func<WebSocket, Task> handler) =>
+			Serve((ws, request) => handler(ws));
+
 		public static WebServer WebSocket(this WebServer server, Func<WebSocket, Request, Task> handler, string path) =>
+			server.RegisterHandler(Serve(handler), path);
+
+		public static WebServer WebSocket(this WebServer server, Func<WebSocket, Task> handler, string path) =>
 			server.RegisterHandler(Serve(handler), path);
 	}
 }
