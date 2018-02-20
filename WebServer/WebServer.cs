@@ -13,7 +13,7 @@ namespace Serac {
 		readonly List<(Func<Request, Task<Response>> Handler, string[] RootPath)> Handlers = new List<(Func<Request, Task<Response>> Handler, string[] RootPath)>();
 		readonly List<Task> Listeners = new List<Task>();
 		
-		public WebServer RegisterHandler(Func<Request, Task<Response>> handler, string root) {
+		public WebServer RegisterHandler(string root, Func<Request, Task<Response>> handler) {
 			var rootpath = root.Split('/');
 			if(rootpath[0] == "")
 				rootpath = rootpath.Skip(rootpath.Length > 1 && rootpath[1] == "" ? 2 : 1).ToArray();
@@ -22,8 +22,8 @@ namespace Serac {
 		}
 
 #pragma warning disable 1998
-		public WebServer RegisterHandler(Func<Request, Response> handler, string root) =>
-			RegisterHandler(async request => handler(request), root);
+		public WebServer RegisterHandler(string root, Func<Request, Response> handler) =>
+			RegisterHandler(root, async request => handler(request));
 #pragma warning restore 1998
 		
 		public WebServer ListenOn(int port, IPAddress ip=null) {

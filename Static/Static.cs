@@ -4,7 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 
 namespace Serac.Static {
-	public static class Static {
+	public static class StaticContent {
 		public static Func<Request, Task<Response>> Serve(string filepath) {
 			filepath += "/";
 			return async request => {
@@ -33,11 +33,11 @@ namespace Serac.Static {
 				};
 			};
 
-		public static WebServer ServeStatic(this WebServer server, string filepath, string path) =>
-			server.RegisterHandler(Serve(filepath), path);
+		public static WebServer Static(this WebServer server, string path, string filepath) =>
+			server.RegisterHandler(path, Serve(filepath));
 
-		public static WebServer ServeStaticFile(this WebServer server, string file, string path) =>
-			server.RegisterHandler(ServeFile(file), path);
+		public static WebServer StaticFile(this WebServer server, string path, string file) =>
+			server.RegisterHandler(path, ServeFile(file));
 
 		static readonly Dictionary<string, string> MimeTypes = new Dictionary<string, string> {
 			[".html"] = "text/html",

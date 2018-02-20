@@ -8,7 +8,7 @@ namespace TestServer {
 	class Program {
 		static void Main(string[] args) {
 			new WebServer()
-				.WebSocket(async (ws, request) => {
+				.WebSocket("/socket", async (ws, request) => {
 					ws.Disconnect += (_, fromClient) => WriteLine($"{(fromClient ? "Client" : "Server")} disconnected");
 					
 					WriteLine($"Message from client: '{await ws.ReadText()}'");
@@ -18,9 +18,9 @@ namespace TestServer {
 					//await ws.Close();
 					while(true)
 						await ws.Write(await ws.ReadText());
-				}, "/socket")
-				.ServeStaticFile("./static/images/favicon.ico", "/favicon.ico")
-				.RegisterHandler(Static.Serve("./static"), "/")
+				})
+				.StaticFile("/favicon.ico", "./static/images/favicon.ico")
+				.RegisterHandler("/", StaticContent.Serve("./static"))
 				.ListenOn(12345)
 				.RunForever();
 		}

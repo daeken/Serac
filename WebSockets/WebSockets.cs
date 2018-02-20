@@ -184,10 +184,10 @@ namespace Serac.WebSockets {
 		public static Func<Request, Task<Response>> Serve(Func<WebSocket, Task> handler, bool enableCompression=true) =>
 			Serve((ws, request) => handler(ws), enableCompression: enableCompression);
 
-		public static WebServer WebSocket(this WebServer server, Func<WebSocket, Request, Task> handler, string path, bool enableCompression=true) =>
-			server.RegisterHandler(Serve(handler, enableCompression: enableCompression), path);
+		public static WebServer WebSocket(this WebServer server, string path, Func<WebSocket, Request, Task> handler, bool enableCompression=true) =>
+			server.RegisterHandler(path, Serve(handler, enableCompression: enableCompression));
 
-		public static WebServer WebSocket(this WebServer server, Func<WebSocket, Task> handler, string path, bool enableCompression=true) =>
-			server.RegisterHandler(Serve(handler, enableCompression: enableCompression), path);
+		public static WebServer WebSocket(this WebServer server, string path, Func<WebSocket, Task> handler, bool enableCompression=true) =>
+			server.RegisterHandler(path, Serve(handler, enableCompression: enableCompression));
 	}
 }
