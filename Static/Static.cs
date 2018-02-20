@@ -6,26 +6,27 @@ using System.Threading.Tasks;
 
 namespace Serac.Static {
 	public static class StaticContent {
-		static bool Cache;
+		static bool Cache, CacheRefresh = true;
 		static float MinimumCompression = 0.9f;
-		static readonly Dictionary<string, Response> FileCache = new Dictionary<string, Response>();
+		static readonly Dictionary<string, (DateTime FileTime, Response Response)> FileCache = new Dictionary<string, (DateTime, Response)>();
 
-		public static WebServer EnableStaticCache(this WebServer server) {
-			Cache = true;
-			return server;
-		}
+		public static WebServer EnableCacheRefresh(this WebServer server) =>
+			server.InlineUpdate(() => CacheRefresh = true);
+		public static WebServer DisableCacheRefresh(this WebServer server) =>
+			server.InlineUpdate(() => CacheRefresh = false);
 
-		public static WebServer SetStaticCompressionMinimum(this WebServer server, float ratio) {
-			MinimumCompression = ratio;
-			return server;
-		}
+		public static WebServer EnableStaticCache(this WebServer server) =>
+			server.InlineUpdate(() => Cache = true);
+		public static WebServer DisableStaticCache(this WebServer server) =>
+			server.InlineUpdate(() => Cache = false);
+
+		public static WebServer SetStaticCompressionMinimum(this WebServer server, float ratio) =>
+			server.InlineUpdate(() => MinimumCompression = ratio);
 
 		static async Task<Response> SendFile(string file, bool gzip) {
-			if(FileCache.ContainsKey(file)) {
-				Console.WriteLine(
-					$"Found file in cache.  '{file}' is {(FileCache[file].Gzipped ? "compressed" : "not compressed")}");
-				return FileCache[file];
-			}
+			if(FileCache.ContainsKey(file) && (!CacheRefresh || FileCache[file].FileTime == File.GetLastWriteTime(file)))
+				return FileCache[file].Response;
+
 			if(!MimeTypes.TryGetValue(Path.GetExtension(file), out var mime))
 				mime = "text/plain";
 
@@ -51,7 +52,7 @@ namespace Serac.Static {
 				}
 			}
 			
-			if(Cache) FileCache[file] = resp;
+			if(Cache) FileCache[file] = (File.GetLastWriteTime(file), resp);
 			return resp;
 		}
 		

@@ -15,14 +15,8 @@ namespace Serac {
 		readonly List<Task> Listeners = new List<Task>();
 		bool CompressionEnabled;
 
-		public WebServer EnableCompression() {
-			CompressionEnabled = true;
-			return this;
-		}
-		public WebServer DisableCompression() {
-			CompressionEnabled = false;
-			return this;
-		}
+		public WebServer EnableCompression() => InlineUpdate(() => CompressionEnabled = true);
+		public WebServer DisableCompression() => InlineUpdate(() => CompressionEnabled = false);
 		
 		public WebServer RegisterHandler(string root, Func<Request, Task<Response>> handler) {
 			var rootpath = root.Split('/');
@@ -119,6 +113,11 @@ namespace Serac {
 			} finally {
 				socket.Close();
 			}
+		}
+
+		public WebServer InlineUpdate(Action cb) {
+			cb();
+			return this;
 		}
 	}
 }
