@@ -19,6 +19,7 @@ namespace TestServer {
 					while(true)
 						await ws.Write(await ws.ReadText());
 				}, "/socket")
+				.ServeStaticFile("./static/images/favicon.ico", "/favicon.ico")
 				.RegisterHandler(Static.Serve("./static"), "/")
 				.ListenOn(12345)
 				.RunForever();

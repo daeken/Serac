@@ -21,8 +21,10 @@ namespace Serac {
 			return this;
 		}
 
+#pragma warning disable 1998
 		public WebServer RegisterHandler(Func<Request, Response> handler, string root) =>
 			RegisterHandler(async request => handler(request), root);
+#pragma warning restore 1998
 		
 		public WebServer ListenOn(int port, IPAddress ip=null) {
 			Listeners.Add(Task.Run(async () => {
@@ -31,7 +33,9 @@ namespace Serac {
 				server.Start();
 				while(true) {
 					var client = await server.AcceptSocketAsync();
+#pragma warning disable 4014
 					Task.Run(() => HandleClient(client));
+#pragma warning restore 4014
 				}
 			}));
 			return this;

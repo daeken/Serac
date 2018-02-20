@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Serac {
@@ -25,5 +27,8 @@ namespace Serac {
 		
 		public static Task WriteAsync(this Stream stream, byte[] data) =>
 			stream.WriteAsync(data, 0, data.Length);
+
+		public static string Join(this IEnumerable<string> list, string joiner) =>
+			string.Join(joiner, list);
 	}
 }

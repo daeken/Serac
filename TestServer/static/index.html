@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<script>
+    var sock = new WebSocket("ws://localhost:12345/socket/test");
+    sock.onopen = function () {
+        console.log("Connected");
+        sock.send("testing! foo");
+        sock.send("some message");
+    };
+    sock.onerror = function () {
+        console.log("Error!");
+    };
+    sock.onmessage = function (e) {
+        console.log("Message '" + e.data + "'");
+        if (e.data == 'some message')
+            sock.close();
+    };
+</script>
+</body>
+</html>
