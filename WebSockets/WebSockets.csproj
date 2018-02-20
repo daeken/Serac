@@ -1,6 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
+    <AssemblyName>Serac.WebSockets</AssemblyName>
+    <RootNamespace>Serac.WebSockets</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\WebServer\WebServer.csproj">
