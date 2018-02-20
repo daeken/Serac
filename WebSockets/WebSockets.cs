@@ -4,11 +4,16 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Serac.WebSockets {
 	public class WebSocket {
+		internal class CloseException : Exception {}
 		readonly Stream Stream;
+
+		public event EventHandler<bool> Disconnect;
+		bool Closed;
 		
 		internal WebSocket(Stream stream) => Stream = stream;
 
@@ -49,6 +54,12 @@ namespace Serac.WebSockets {
 			var start = await Stream.ReadAsync(2);
 			var final = start[0] >> 7 == 1;
 			var opcode = start[0] & 0xF;
+			if(opcode == 8) {
+				Closed = true;
+				Disconnect?.Invoke(this, true);
+				throw new CloseException();
+			}
+
 			var plen = start[1] & 0x7F;
 			if(plen == 126)
 				BitConverter.ToInt16(await Stream.ReadAsync(2), 0);
@@ -71,6 +82,16 @@ namespace Serac.WebSockets {
 			await Stream.WriteAsync(data);
 			await Stream.FlushAsync();
 		}
+
+		public async Task Close() {
+			if(!Closed) {
+				Closed = true;
+				Disconnect?.Invoke(this, false);
+				await WriteFrame(true, 8, new byte[0]);
+				Stream.Close();
+				throw new CloseException();
+			}
+		}
 	}
 	
 	public static class WebSockets {
@@ -92,8 +113,12 @@ namespace Serac.WebSockets {
 				}.Send(request.Stream, request.StreamWriter);
 				
 				var ws = new WebSocket(request.Stream);
-				await handler(ws, request);
-				
+				try {
+					await handler(ws, request);
+				} catch(WebSocket.CloseException) {
+					await ws.Close();
+				}
+
 				return null;
 			};
 		}

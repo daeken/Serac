@@ -63,6 +63,8 @@ namespace Serac {
 							continue;
 						request.Path = rp.Length == 0 ? request.RealPath : "/" + string.Join('/', path.Skip(rp.Length));
 						response = await handler(request);
+						if(!stream.CanWrite)
+							return;
 						break;
 					}
 
