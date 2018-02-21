@@ -80,8 +80,8 @@ namespace Serac {
 
 		public async Task Send(Stream stream, StreamWriter sw) {
 			await sw.WriteAsync($"HTTP/1.1 {StatusCode} {(StatusCodes.ContainsKey(StatusCode) ? StatusCodes[StatusCode] : "Unknown")}\r\n");
-			if(Data != null && !Headers.ContainsKey("Content-Length"))
-				Headers["Content-Length"] = Data.Length.ToString();
+			if(!Headers.ContainsKey("Content-Length"))
+				Headers["Content-Length"] = Data == null ? "0" : Data.Length.ToString();
 			foreach(var (k, v) in Headers)
 				if(v != null)
 					await sw.WriteAsync($"{k}: {v.CutAt('\r').CutAt('\n')}\r\n");

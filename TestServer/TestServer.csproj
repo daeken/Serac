@@ -4,6 +4,7 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Katatonic\Katatonic.csproj" />
     <ProjectReference Include="..\Static\Static.csproj" />
     <ProjectReference Include="..\WebServer\WebServer.csproj" />
     <ProjectReference Include="..\WebSockets\WebSockets.csproj" />

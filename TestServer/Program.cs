@@ -1,10 +1,29 @@
 ﻿using System.Threading.Tasks;
 using Serac;
+using Serac.Katatonic;
 using Serac.Static;
 using Serac.WebSockets;
 using static System.Console;
 
 namespace TestServer {
+	[Handler]
+	internal class Root {
+		[Get]
+		async Task Index() {
+			WriteLine($"Root/Index");
+		}
+		[Get]
+		async Task<string> ProperTest(string strParam, int intParam, int defParam = 5) {
+			WriteLine($"Root/properTest '{strParam}' {intParam} {defParam}");
+			return $"Test!";
+		}
+	}
+
+	[Handler("/test")]
+	internal class Test {
+		
+	}
+	
 	class Program {
 		static void Main(string[] args) {
 			new WebServer()
@@ -22,6 +41,10 @@ namespace TestServer {
 						await ws.Write(await ws.ReadText());
 				})
 				.StaticFile("/favicon.ico", "./static/images/favicon.ico")
+				.Katatonic("/katatonic", app => {
+					app.Register<Root>();
+					app.Register<Test>();
+				})
 				.RegisterHandler("/", StaticContent.Serve("./static"))
 				.ListenOn(12345)
 				.RunForever();

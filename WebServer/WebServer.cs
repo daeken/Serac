@@ -85,13 +85,15 @@ namespace Serac {
 						keepAlive = request.Headers.ContainsKey("Connection") && request.Headers["Connection"] == "keep-alive";
 						first = false;
 					}
-					
+
 					if(response == null)
 						response = new Response {StatusCode = 404, Body = "File not found"};
 					if(keepAlive)
 						response.Headers["Connection"] = "keep-alive";
 
-					if(request.UseGzip && !response.Gzipped && !response.NoCompression) {
+					if(request.UseGzip && response.Data == null)
+						response.Gzipped = false;
+					else if(request.UseGzip && !response.Gzipped && !response.NoCompression) {
 						using(var wms = new MemoryStream()) {
 							using(var rms = new MemoryStream(response.Data))
 								using(var gs = new GZipStream(wms, CompressionLevel.Fastest)) {

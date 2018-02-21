@@ -14,6 +14,7 @@ namespace Serac {
 		public readonly HeaderDictionary Headers;
 		public readonly byte[] Body;
 		public bool UseGzip;
+		public readonly Dictionary<string, string> PostParameters;
 
 		public string Path { get; internal set; }
 
