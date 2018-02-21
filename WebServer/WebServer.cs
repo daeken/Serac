@@ -77,7 +77,8 @@ namespace Serac {
 						response = await handler(request);
 						if(!stream.CanWrite)
 							return;
-						break;
+						if(response != null)
+							break;
 					}
 
 					if(first) {

@@ -84,7 +84,8 @@ namespace Serac {
 				Headers["Content-Length"] = Data.Length.ToString();
 			foreach(var (k, v) in Headers)
 				if(v != null)
-					await sw.WriteAsync($"{k}: {v}\r\n");
+					await sw.WriteAsync($"{k}: {v.CutAt('\r').CutAt('\n')}\r\n");
+
 			await sw.WriteAsync("\r\n");
 			await sw.FlushAsync();
 

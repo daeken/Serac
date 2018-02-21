@@ -3,5 +3,9 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <AssemblyName>Serac</AssemblyName>
     <RootNamespace>Serac</RootNamespace>
+    <PackageId>Serac</PackageId>
+    <PackageVersion>0.1.0</PackageVersion>
+    <Authors>Cody Brocious</Authors>
+    <Description>Fast, embeddable web server for .NET Core</Description>
   </PropertyGroup>
 </Project>

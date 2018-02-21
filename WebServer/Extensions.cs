@@ -30,5 +30,10 @@ namespace Serac {
 
 		public static string Join(this IEnumerable<string> list, string joiner) =>
 			string.Join(joiner, list);
+
+		public static string CutAt(this string v, char c) {
+			var pos = v.IndexOf(c);
+			return pos == -1 ? v : v.Substring(0, pos);
+		}
 	}
 }
