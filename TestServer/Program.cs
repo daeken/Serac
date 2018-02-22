@@ -13,9 +13,9 @@ namespace TestServer {
 			WriteLine($"Root/Index");
 		}
 		[Get]
-		async Task<string> ProperTest(string strParam, int intParam, int defParam = 5) {
-			WriteLine($"Root/properTest '{strParam}' {intParam} {defParam}");
-			return $"Test!";
+		async Task<Response> ProperTest(string strParam, int intParam, bool boolParam, int defParam = 5) {
+			WriteLine($"Root/properTest '{strParam}' {intParam} {defParam} {boolParam}");
+			return new Response {StatusCode = 200, Body = "Testing testing"};
 		}
 	}
 

@@ -27,4 +27,16 @@ namespace Serac.Katatonic {
 	public class DeleteAttribute : MethodAttribute {
 		public DeleteAttribute(string name = null) : base(name) {}
 	}
+
+	[AttributeUsage(AttributeTargets.Method)]
+	public class KatatonicArgumentParserAttribute : Attribute {
+		public readonly Type Type;
+		public KatatonicArgumentParserAttribute(Type type) => Type = type;
+	}
+
+	[AttributeUsage(AttributeTargets.Method)]
+	public class KatatonicHandlerBuilderAttribute : Attribute {
+		public readonly Type Type;
+		public KatatonicHandlerBuilderAttribute(Type type) => Type = type;
+	}
 }
