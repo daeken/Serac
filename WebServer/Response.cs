@@ -68,6 +68,7 @@ namespace Serac {
 		public readonly HeaderDictionary Headers = new HeaderDictionary();
 		public byte[] Data;
 		public bool Gzipped, NoCompression;
+		public readonly Dictionary<string, string> Cookies = new Dictionary<string, string>();
 
 		public string Body {
 			set => Data = Encoding.UTF8.GetBytes(value);
@@ -82,6 +83,9 @@ namespace Serac {
 			await sw.WriteAsync($"HTTP/1.1 {StatusCode} {(StatusCodes.ContainsKey(StatusCode) ? StatusCodes[StatusCode] : "Unknown")}\r\n");
 			if(!Headers.ContainsKey("Content-Length"))
 				Headers["Content-Length"] = Data == null ? "0" : Data.Length.ToString();
+			foreach(var (k, v) in Cookies)
+				if(v != null)
+					Headers["Set-Cookie"] = $"{k}={v}"; // XXX: Add Secure/HttpOnly/Expiration
 			foreach(var (k, v) in Headers)
 				if(v != null)
 					await sw.WriteAsync($"{k}: {v.CutAt('\r').CutAt('\n')}\r\n");

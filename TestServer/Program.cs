@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Serac;
 using Serac.Katatonic;
 using Serac.Static;
@@ -7,20 +8,34 @@ using static System.Console;
 
 namespace TestServer {
 	[Handler]
-	internal class Root {
+	internal class Root : Katatonic {
 		[Get]
-		async Task Index() {
-			WriteLine($"Root/Index");
+		async Task<(string, string)> Index() {
+			if(!Session.Values.ContainsKey("test"))
+				Session.Values["test"] = "0";
+			Session.Values["test"] = $"{int.Parse(Session.Values["test"]) + 1}";
+			WriteLine($"Getting index ... ? {Session.Values["test"]}");
+			return (
+				"text/html", 
+				"<form method=\"POST\" action=\"postTest\"><input type=\"text\" name=\"somePostParam\"><input type=\"submit\">"
+			);
 		}
+
 		[Get]
-		async Task<Response> ProperTest(string strParam, int intParam, bool boolParam, int defParam = 5) {
-			WriteLine($"Root/properTest '{strParam}' {intParam} {defParam} {boolParam}");
+		async Task<Response> GetTest(string strParam, int intParam, bool boolParam, int defParam = 5) {
+			WriteLine($"Root/getTest '{strParam}' {intParam} {defParam} {boolParam}");
 			return new Response {StatusCode = 200, Body = "Testing testing"};
+		}
+
+		[Post]
+		async Task<(string, string)> PostTest(string somePostParam) {
+			WriteLine($"Post!");
+			return ("text/plain", $"Got post! {somePostParam}");
 		}
 	}
 
 	[Handler("/test")]
-	internal class Test {
+	internal class Test : Katatonic {
 		
 	}
 	

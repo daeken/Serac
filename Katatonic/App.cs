@@ -27,6 +27,14 @@ namespace Serac.Katatonic {
 				return await (Task<Response>) method.Invoke(instance, args);
 			};
 
+		[KatatonicHandlerBuilder(typeof(Task<(string, string)>))]
+		public static Func<Request, object[], MethodInfo, object, Task<Response>> StringResponseBuilder() =>
+			async (request, args, method, instance) => {
+				if(args == null) return null;
+				var (mime, data) = await (Task<(string, string)>) method.Invoke(instance, args);
+				return mime == null ? null : new Response {StatusCode = 200, Body = data, ContentType = mime};
+			};
+
 		[KatatonicArgumentParser(typeof(int))]
 		public static Func<Request, object> IntParam(string rmethod, string name, bool hasDefault, int? def) {
 			if(rmethod == "POST") {
@@ -139,18 +147,14 @@ namespace Serac.Katatonic {
 		public readonly Dictionary<(string Method, string Path), Func<Request, Task<Response>>> Handlers = 
 			new Dictionary<(string Method, string Path), Func<Request, Task<Response>>>();
 		
-		internal App(Action<App> builder) {
-			builder(this);
-		}
-		
+		internal App(Action<App> builder) => builder(this);
+
 		internal async Task<Response> Handle(Request request) {
-			WriteLine($"");
 			var key = (request.Method, request.Path);
 			return Handlers.ContainsKey(key) ? await Handlers[key](request) : null;
 		}
 
-		public App Register<HandlerT>() where HandlerT : new() {
-			var instance = new HandlerT();
+		public App Register<HandlerT>() where HandlerT : Katatonic, new() {
 			var itype = typeof(HandlerT);
 			var attr = (HandlerAttribute[]) itype.GetCustomAttributes(typeof(HandlerAttribute), false);
 			if(attr.Length != 1)
@@ -171,13 +175,13 @@ namespace Serac.Katatonic {
 
 				var tpath = name == null ? path : $"{path}{(path.EndsWith("/") ? "" : "/")}{name}";
 				WriteLine($"Handler {meth.Name} has path '{tpath}'");
-				Handlers[(method, tpath)] = BuildHandler(method, instance, meth);
+				Handlers[(method, tpath)] = BuildHandler<HandlerT>(method, meth);
 			}
 			
 			return this;
 		}
 
-		Func<Request, Task<Response>> BuildHandler(string rmethod, object instance, MethodInfo method) {
+		Func<Request, Task<Response>> BuildHandler<HandlerT>(string rmethod, MethodInfo method) where HandlerT : Katatonic, new() {
 			var argFuncs = new List<Func<Request, object>>();
 
 			foreach(var arg in method.GetParameters()) {
@@ -204,7 +208,20 @@ namespace Serac.Katatonic {
 				throw new ArgumentException();
 			
 			var handlerWrapper = HandlerBuilders[method.ReturnType]();
-			return request => handlerWrapper(request, ArgBuilder(request), method, instance);
+			return async request => {
+				var session = new Session(request);
+				var instance = new HandlerT { Request = request, Session = session };
+				Response resp;
+				try {
+					resp = await handlerWrapper(request, ArgBuilder(request), method, instance);
+				} catch {
+					return null;
+				}
+
+				if(resp == null) return null;
+				session.SetCookie(resp);
+				return resp;
+			};
 		}
 	}
 }

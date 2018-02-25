@@ -25,6 +25,12 @@ namespace Serac {
 			return data;
 		}
 		
+		internal static async Task<byte[]> ReadAsync(this InternalStreamReader stream, int count) {
+			var data = new byte[count];
+			await stream.ReadAsync(data, 0, count);
+			return data;
+		}
+		
 		public static Task WriteAsync(this Stream stream, byte[] data) =>
 			stream.WriteAsync(data, 0, data.Length);
 

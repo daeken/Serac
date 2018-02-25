@@ -39,7 +39,7 @@ namespace Serac {
 				while(true) {
 					var client = await server.AcceptSocketAsync();
 #pragma warning disable 4014
-					Task.Run(() => HandleClient(client));
+					Task.Factory.StartNew(() => HandleClient(client), TaskCreationOptions.PreferFairness);
 #pragma warning restore 4014
 				}
 			}));
@@ -52,7 +52,7 @@ namespace Serac {
 			try {
 				var stream = new NetworkStream(socket);
 
-				var sr = new StreamReader(stream, Encoding.UTF8);
+				var sr = new InternalStreamReader(stream);
 				var sw = new StreamWriter(stream, Encoding.UTF8);
 
 				bool keepAlive = false;
