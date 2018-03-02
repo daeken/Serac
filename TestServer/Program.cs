@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Serac;
 using Serac.Katatonic;
 using Serac.Static;
+using Serac.Template;
 using Serac.WebSockets;
 using static System.Console;
 
@@ -34,9 +36,25 @@ namespace TestServer {
 		}
 	}
 
+	public class TestTemplateModel {
+		public string Title;
+		public List<string> List = new List<string>();
+		public int Expr;
+	}
+
 	[Handler("/test")]
 	internal class Test : Katatonic {
+		[Get]
+		[Template("templates/test.kaml")]
+		async Task<TestTemplateModel> Index() {
+			return new TestTemplateModel { Title="Testing Title", List={ "Element 1", "Element deux" }, Expr=123 };
+		}
 		
+		[Get]
+		[Template("templates/test.kaml")]
+		TestTemplateModel Sync() {
+			return new TestTemplateModel { Title="Synchronous", List={ "Some elements", "From synchronous method" }, Expr=456 };
+		}
 	}
 	
 	class Program {

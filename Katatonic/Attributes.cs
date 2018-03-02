@@ -39,4 +39,10 @@ namespace Serac.Katatonic {
 		public readonly Type Type;
 		public KatatonicHandlerBuilderAttribute(Type type) => Type = type;
 	}
+
+	[AttributeUsage(AttributeTargets.Method)]
+	public class TemplateAttribute : Attribute {
+		public readonly string Path;
+		public TemplateAttribute(string path) => Path = path;
+	}
 }

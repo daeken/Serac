@@ -32,6 +32,10 @@ namespace Serac {
 #pragma warning restore 1998
 		
 		public WebServer ListenOn(int port, IPAddress ip=null) {
+			if(ip == null)
+				WriteLine($"Listening on port {port} on all interfaces");
+			else
+				WriteLine($"Listening on {ip}:{port}");
 			Listeners.Add(Task.Run(async () => {
 				var server = new TcpListener(ip ?? IPAddress.Any, port);
 				server.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, 1);

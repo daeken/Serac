@@ -1,0 +1,29 @@
+~ using System.Linq
+- html(lang="en")
+	- head
+		- meta(charset="UTF-8")
+		- title =Title
+	-body
+		- h1 =Title
+		- ul
+			@ foreach(var elem in List)
+				- li =elem
+		- ol.olcls#someid
+			@ for(var i = 0; i < 10; ++i)
+				- li =i
+		.test
+			Div with class test
+			And some {Expr} goes here!
+			- br
+			On another line
+		#id
+			Div with id 'id'
+		- div(test=string.Join(" -- ", new [] { "hi", "hello", $"welcome {("test)}\"})")}" }.Select((x) => x.ToUpper())))
+		- script
+			document.write('Hello from JS in KAML!');
+			document.write('this is not an {expr!}');
+			if(1 == 2) {
+				foo();
+				bar();
+			}
+			document.write('this is not an {expr!}');

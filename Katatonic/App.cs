@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Serac.Template;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -25,6 +26,19 @@ namespace Serac.Katatonic {
 			async (request, args, method, instance) => {
 				if(args == null) return null;
 				return await (Task<Response>) method.Invoke(instance, args);
+			};
+
+		[KatatonicHandlerBuilder(typeof((string, string)))]
+		public static Func<Request, object[], MethodInfo, object, Task<Response>> SyncStringResponseBuilder() =>
+			(request, args, method, instance) => {
+				if(args == null) return null;
+				try {
+					var (mime, data) = ((string, string)) method.Invoke(instance, args);
+					return Task.FromResult(mime == null ? null : new Response {StatusCode = 200, Body = data, ContentType = mime});
+				} catch(Exception e) {
+					WriteLine($"Exception: {e.StackTrace}\n{e}");
+					throw;
+				}
 			};
 
 		[KatatonicHandlerBuilder(typeof(Task<(string, string)>))]
@@ -204,17 +218,53 @@ namespace Serac.Katatonic {
 				return args.Contains(NonexistentArgument.Instance) ? null : args;
 			}
 
-			if(!HandlerBuilders.ContainsKey(method.ReturnType))
+			Func<Request, object[], MethodInfo, object, Task<Response>> handlerWrapper = null;
+
+			var tpattr = method.GetCustomAttribute(typeof(TemplateAttribute));
+			if(tpattr is TemplateAttribute tattr) {
+				(Type, object) MakeTemplateObject(Type modelType) {
+					var tplt = typeof(Template<object>).GetGenericTypeDefinition().MakeGenericType(modelType);
+					return (tplt, Activator.CreateInstance(tplt, tattr.Path));
+				}
+				if(method.ReturnType.IsGenericType && method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>)) {
+					var (tt, tpl) = MakeTemplateObject(method.ReturnType.GetGenericArguments()[0]);
+					var rm = tt.GetMethod("Render");
+					handlerWrapper = async (request, args, _method, instance) => {
+						var task = (Task) _method.Invoke(instance, null);
+						await task.ConfigureAwait(false);
+						var tdata = task.GetType().GetProperty("Result").GetValue(task);
+						if(tdata == null) return null;
+						var rendered = (string) rm.Invoke(tpl, new[] { tdata });
+						if(rendered == null) return null;
+						return new Response { StatusCode = 200, ContentType = "text/html", Body = rendered };
+					};
+				} else {
+					var (tt, tpl) = MakeTemplateObject(method.ReturnType);
+					var rm = tt.GetMethod("Render");
+					handlerWrapper = async (request, args, _method, instance) => {
+						var tdata = _method.Invoke(instance, null);
+						if(tdata == null) return null;
+						var rendered = (string) rm.Invoke(tpl, new[] { tdata });
+						if(rendered == null) return null;
+						return new Response { StatusCode = 200, ContentType = "text/html", Body = rendered };
+					};
+				}
+			}
+
+			if(handlerWrapper == null && !HandlerBuilders.ContainsKey(method.ReturnType))
 				throw new ArgumentException();
-			
-			var handlerWrapper = HandlerBuilders[method.ReturnType]();
+			if(handlerWrapper == null)
+				handlerWrapper = HandlerBuilders[method.ReturnType]();
 			return async request => {
 				var session = new Session(request);
 				var instance = new HandlerT { Request = request, Session = session };
 				Response resp;
 				try {
 					resp = await handlerWrapper(request, ArgBuilder(request), method, instance);
-				} catch {
+				} catch(Exception e) {
+					WriteLine($"Exception while handling {request.RealPath}");
+					WriteLine(e.Message);
+					WriteLine(e.StackTrace);
 					return null;
 				}
 

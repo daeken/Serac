@@ -2,10 +2,13 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.0</TargetFramework>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Katatonic\Katatonic.csproj" />
     <ProjectReference Include="..\Static\Static.csproj" />
+    <ProjectReference Include="..\Template\Template.csproj" />
     <ProjectReference Include="..\WebServer\WebServer.csproj" />
     <ProjectReference Include="..\WebSockets\WebSockets.csproj" />
   </ItemGroup>
