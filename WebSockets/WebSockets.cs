@@ -141,7 +141,7 @@ namespace Serac.WebSockets {
 		public static Func<Request, Task<Response>> Serve(Func<WebSocket, Request, Task> handler, bool enableCompression=true) {
 			return async request => {
 				if(request.Method != "GET" || !request.Headers.ContainsKey("Connection") ||
-				   request.Headers["Connection"] != "Upgrade")
+				   !request.Headers["Connection"].Split(',').Select(x => x.Trim().ToLower()).Contains("upgrade"))
 					return null;
 
 				var pext = request.Headers.GetList("Sec-WebSocket-Extensions")?.Join(",")?.Split(",") ?? Enumerable.Empty<string>();

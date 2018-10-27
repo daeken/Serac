@@ -2,7 +2,7 @@
 <html lang="en">
 <body>
 <script>
-    var sock = new WebSocket("ws://localhost:12345/socket/test");
+    var sock = new WebSocket("ws://localhost:12345/socket");
     sock.onopen = function () {
         console.log("Connected");
         sock.send("testing! foo");
